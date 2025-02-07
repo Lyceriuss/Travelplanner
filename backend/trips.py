@@ -129,7 +129,7 @@ class TripPlanner:
             end_lat, end_lon, _ = stations[train_stations[i + 1][0]]
 
             polyline = LineString([(start_lon, start_lat), (end_lon, end_lat)])
-            buffered_polyline = polyline.buffer(0.40)
+            buffered_polyline = polyline.buffer(0.50)
 
             print(f"🚆 Buffered Area for Train Segment: {buffered_polyline}")
 
@@ -514,7 +514,7 @@ class TripPlanner:
             # Plot the walking route
             folium.PolyLine(
                 route_coords,
-                color="green",
+                color="Orange",
                 weight=5,
                 opacity=1,
                 tooltip="Walking Route",
@@ -547,9 +547,29 @@ class TripPlanner:
                 self.plot_tram_routes(stations)
             elif transport_type == "5":
                 self.plot_subway_routes(stations)
-            elif transport_type == "unknown" and len(self.route_legs) > 1:
-                start = self.route_legs[-1][1][-1][1:3]
-                end = stations[-1][1:3]
+            elif transport_type == "unknown":
+                if not self.route_legs:  # If it's the first segment (no previous legs)
+                    # Extract from self.trip_data to find the first walking start
+                    first_leg = self.trip_data["Trip"][0]["LegList"]["Leg"][0]
+                    next_leg = self.trip_data["Trip"][0]["LegList"]["Leg"][
+                        1
+                    ]  # First transport segment
+
+                    start = (
+                        first_leg["Origin"]["lat"],
+                        first_leg["Origin"]["lon"],
+                    )  # Walking start
+                    end = (
+                        next_leg["Origin"]["lat"],
+                        next_leg["Origin"]["lon"],
+                    )  # Next transport start
+                else:
+                    start = self.route_legs[-1][1][-1][
+                        1:3
+                    ]  # Last stop of the previous segment
+                    end = stations[-1][1:3]  # Last stop of the current segment
+
+                print(f"🚶 Walking route correctly assigned: Start {start} → End {end}")
                 self.plot_walking_route(start, end)
 
         # ✅ Add station markers separately to ensure they are always plotted

@@ -65,12 +65,29 @@ def generate_and_display_map(tp):
             tp.plot_tram_routes(tp.map_route, stations)
         elif transport_type == "5":
             tp.plot_subway_routes(tp.map_route, stations)  # ✅ Subway plotting function
-        elif transport_type == "unknown" and i > 0:
-            # 🚨 FIX: Correctly use the last station from the previous leg as the start
-            start = tp.route_legs[i - 1][1][-1][1:3]  # Last stop of previous leg
-            end = stations[-1][1:3]  # Last stop of current leg
+        elif transport_type == "unknown":
+            if i > 0:
+                start = tp.route_legs[i - 1][1][-1][1:3]  # Last stop of previous leg
+                end = stations[-1][1:3]  # Last stop of current leg
+            else:
+                # 🚨 First segment: Walking start must be from Origin, and end at first transport Origin
+                first_leg = tp.trip_data["Trip"][0]["LegList"]["Leg"][0]
+                next_leg = tp.trip_data["Trip"][0]["LegList"]["Leg"][
+                    1
+                ]  # First transport segment
+
+                start = (
+                    first_leg["Origin"]["lat"],
+                    first_leg["Origin"]["lon"],
+                )  # Walking start
+                end = (
+                    next_leg["Origin"]["lat"],
+                    next_leg["Origin"]["lon"],
+                )  # Next transport start
+
             print(f"🚶 Walking route correctly assigned: Start {start} → End {end}")
             tp.plot_walking_route(tp.map_route, start, end)
+
     map_html = tp.map_route._repr_html_()
     styled_html = f"""
     <div style="border: 5px solid #20265A; border-radius: 3px; ">
@@ -333,7 +350,7 @@ def main():
                 selected = st.session_state.selected_trip
 
                 with st.container(border=True):
-                    st.subheader(f"📌 {selected['transport_name']} mot {end_name}")
+                    st.subheader(f" {selected['transport_name']} mot {end_name}")
 
                     st.divider()  # Adds separation
                     st.write(

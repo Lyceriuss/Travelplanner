@@ -1,4 +1,5 @@
 import calendar
+import time
 from datetime import datetime, timedelta
 
 import streamlit as st
@@ -97,14 +98,46 @@ def get_full_search_parameters(
             current_month = today_date.month
             last_day = calendar.monthrange(current_year, current_month)[1]
             last_date_of_month = datetime(current_year, current_month, last_day).date()
-            date_col1, date_col2 = st.columns([0.3, 0.7])
-            travel_date = date_col1.date_input(
-                "Välj resedatum",
-                value=today_date,
-                min_value=today_date,
-                max_value=last_date_of_month,
-                key="travel_date",
-            )
+
+            date_col1, date_col2, date_col3 = st.columns(
+                [0.3, 0.5, 0.2]
+            )  # 🔄 Added a third column
+
+            # Travel Date Picker
+            with date_col1:
+                travel_date = st.date_input(
+                    "Välj resedatum",
+                    value=today_date,
+                    min_value=today_date,
+                    max_value=last_date_of_month,
+                    key="travel_date",
+                )
+
+            # 🔘 Add a Button in the third column
+            with date_col3:
+                # st.markdown("""<div style="margin-bottom: 10px;"></div>""",unsafe_allow_html=True)
+                st.markdown(
+                    """
+                        <style>
+                            div.stButton > button {
+                                margin-top: 5px;
+                                font-size: 20px !important;  /* Bigger text */
+                                padding: 12px 24px !important;  /* More padding */
+                                border-radius: 8px !important;  /* Rounded corners */
+                            }
+                        </style>
+                        """,
+                    unsafe_allow_html=True,
+                )
+                search_button = st.button(
+                    "🔍 **Sök resa**", key="search_button", use_container_width=True
+                )
+                # Add spinning animation when the button is clicked
+                if search_button:
+                    with st.spinner("🚄 **Laddar resor...**"):
+                        time.sleep(2)  # Simulate loading time
+                        st.success("✅ Resor laddade!")  # Temporary success message
+
             params["date"] = travel_date.strftime("%Y-%m-%d")
 
             # Determine time slider range based on travel_date.
